@@ -1,0 +1,197 @@
+PRODUCT SPECIFICATION — EMAIL ROUTER v1.0
+InnovateNext Solutions | Confidential
+Last Updated: April 2026
+
+===========================================
+1. PRODUCT OVERVIEW
+===========================================
+
+The Email Router is an AI-powered system designed to automatically classify,
+prioritize, and route incoming emails to the correct team or individual within
+InnovateNext Solutions. It replaces the current manual triage process, which
+is causing 2–4 hour delays in response times and frequent misrouting of
+customer inquiries.
+
+The system uses a combination of rule-based logic and machine learning to
+analyze the content, sender, and metadata of each incoming email, then
+dispatches it to the appropriate queue with a confidence score and priority
+label attached.
+
+===========================================
+2. PROBLEM STATEMENT
+===========================================
+
+InnovateNext currently receives approximately 500 emails per day across a
+single shared inbox (support@innovatenext.com). Support agents manually read,
+categorize, and forward each email to the relevant team. This process leads to:
+
+  - Average triage time:   3.2 hours per daily batch
+  - Misrouting rate:       ~18% of emails land in the wrong queue
+  - SLA breaches:          34% of P1 (urgent) issues exceed the 2-hour target
+  - Agent burnout:         triage is repetitive, low-value work that blocks
+                           agents from resolving actual customer issues
+
+===========================================
+3. TARGET USERS
+===========================================
+
+PRIMARY USERS
+  - Customer Support Agents
+    Assign tasks, verify and override routing decisions, resolve tickets.
+
+  - Team Leads (Support, Billing, Engineering, Sales)
+    Monitor team queues, override routing decisions, view accuracy reports.
+
+SECONDARY USERS
+  - System Administrators
+    Configure routing rules, manage integrations, access audit logs.
+
+INTERNAL RECIPIENTS (not direct users, but affected by routing)
+  - Engineering Team
+  - Sales Team
+  - Billing Team
+  - Legal Team
+
+===========================================
+4. CORE FEATURES
+===========================================
+
+4.1 AUTOMATIC EMAIL CLASSIFICATION
+  - Classify each incoming email into one or more categories:
+      Support, Billing, Sales, Legal, Spam, Internal
+  - Assign a confidence score per classification (0.00 – 1.00)
+  - Support multi-label classification (an email can belong to more than
+    one category, e.g. Billing + Support)
+  - Flag low-confidence classifications (below 0.70) for human review
+
+4.2 PRIORITY DETECTION
+  - Assign one of four priority levels to each email:
+      P1 — Critical  (SLA: respond within 2 hours)
+      P2 — High      (SLA: respond within 8 hours)
+      P3 — Medium    (SLA: respond within 24 hours)
+      P4 — Low       (SLA: respond within 72 hours)
+  - Priority signals used by the model:
+      - Keywords: "urgent", "ASAP", "broken", "not working", "legal action"
+      - Customer tier: Enterprise → higher base priority than Pro or Free
+      - Account health score from CRM: at-risk accounts escalate faster
+      - Time since last reply: re-opened threads increase priority
+  - Auto-escalation: P1 emails trigger an immediate Slack notification to
+    the relevant team lead
+
+4.3 INTELLIGENT ROUTING
+  - Route each classified email to the correct team queue based on:
+      - Classification label
+      - Configurable routing rules (managed via admin UI, no code required)
+      - Sender's account tier and assigned account manager
+  - Fallback routing: emails that cannot be classified with confidence ≥ 0.70
+    are sent to the "Unassigned" queue and trigger an alert to the on-call agent
+  - Support round-robin assignment within a team queue (optional, per-team)
+
+4.4 SENDER ENRICHMENT
+  - Look up the sender's email address in the CRM (Salesforce integration)
+  - Attach the following data to each routed email:
+      - Customer name and company
+      - Account tier (Enterprise / Pro / Free / Trial)
+      - Open ticket count
+      - Account health score (0–100)
+      - Assigned account manager
+  - Flag VIP customers (Enterprise tier or health score below 40) for
+    priority handling regardless of email content
+
+4.5 DUPLICATE DETECTION AND THREAD MANAGEMENT
+  - Detect if an incoming email is a duplicate or a reply to an existing thread
+  - Link the email to the existing ticket in the helpdesk system (Zendesk)
+  - Suppress routing for duplicates — update the existing ticket instead
+  - Detect follow-ups sent after 72 hours of silence and re-open the ticket
+
+4.6 AUDIT TRAIL AND REPORTING
+  - Log every routing decision with:
+      - Timestamp
+      - Classification label and confidence score
+      - Priority assigned
+      - Routing rule applied
+      - Agent who processed or overrode the decision
+  - Allow agents to edit the routing reason and mark decisions as correct or
+    incorrect (used to retrain the model over time)
+  - Weekly accuracy report delivered to team leads every Monday at 9:00 AM:
+      - Routing accuracy rate
+      - Misrouting breakdown by category
+      - Average confidence score
+      - SLA compliance rate per priority level
+
+===========================================
+5. NON-FUNCTIONAL REQUIREMENTS
+===========================================
+
+PERFORMANCE
+  - Processing latency:  < 2 seconds per email from receipt to routing
+  - Throughput:          handle up to 5,000 emails per day (10× current volume)
+  - Uptime:              99.9% availability (< 8.7 hours downtime per year)
+
+ACCURACY
+  - Routing accuracy target:  > 92% correct routing, measured weekly
+  - Confidence threshold:     emails below 0.70 confidence go to Unassigned
+  - Model retraining:         monthly, using agent feedback from audit trail
+
+SECURITY AND COMPLIANCE
+  - Email content must not be stored beyond 30 days (GDPR Article 5)
+  - All data in transit encrypted with TLS 1.3
+  - All data at rest encrypted with AES-256
+  - Role-based access control: agents see only their team's queue
+  - Full audit log retained for 12 months for compliance purposes
+  - SOC 2 Type II compliance required before production launch
+
+INTEGRATIONS
+  - Zendesk:    REST API v2 — ticket creation, update, thread linking
+  - Salesforce: REST API — sender enrichment, account data read-only
+  - Slack:      Webhooks — P1 escalation alerts, weekly report delivery
+  - Email:      IMAP/SMTP for Gmail and Microsoft 365 (OAuth2 auth)
+
+===========================================
+6. OUT OF SCOPE — v1.0
+===========================================
+
+The following features are explicitly excluded from this release and planned
+for future versions:
+
+  - Auto-reply / response generation          (planned for v2.0)
+  - Sentiment analysis                        (planned for v2.0)
+  - Attachment parsing (PDFs, images, etc.)   (planned for v2.1)
+  - Multi-language support                    (English only for v1.0)
+  - Mobile application                        (planned for v3.0)
+  - Custom ML model training UI               (planned for v2.1)
+
+===========================================
+7. SUCCESS METRICS
+===========================================
+
+The product will be considered successful when all of the following targets
+are met and sustained for 4 consecutive weeks post-launch:
+
+  METRIC                              BASELINE     TARGET
+  ─────────────────────────────────────────────────────────
+  Triage time per daily batch         3.2 hours    < 15 minutes
+  Email misrouting rate               18%          < 5%
+  P1 SLA compliance rate              66%          > 95%
+  Support agent satisfaction score    3.1 / 5.0    > 4.0 / 5.0
+  System uptime                       —            > 99.9%
+  Routing accuracy rate               —            > 92%
+
+===========================================
+8. OPEN QUESTIONS
+===========================================
+
+The following decisions are pending and must be resolved before development
+begins:
+
+  1. Should the model handle email threads as a single unit or process each
+     reply independently? (impacts accuracy and latency)
+
+  2. What is the fallback behavior if the Salesforce API is unavailable?
+     Route without enrichment, or hold the email in a pending queue?
+
+  3. Who owns the routing rules configuration? Support Ops or Engineering?
+     This affects the admin UI design and permission model.
+
+  4. Is round-robin assignment within team queues required at launch or
+     can it be deferred to v1.1?
