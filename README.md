@@ -102,30 +102,6 @@ python tests/test_action_planning.py
 python agentic_workflow.py
 ```
 
-Produces a structured JSON report and a Markdown summary in `output/`.
-
----
-
-## Key Design Decisions
-
-**Explicit over magic.** Every agent is a plain Python class. No hidden state, no framework DSL. You can read the code top to bottom and understand every prompt being sent.
-
-**Composable by default.** Agents are independent. You can use `EvaluationAgent` alone, or wire `RoutingAgent` into an existing pipeline without touching anything else.
-
-**Fail loudly, recover gracefully.** Agents raise on API errors. The orchestrator handles retries at the workflow level, not inside the agent.
-
-**JSON as the contract.** Agents that return structured data always return Python dicts. Parsing failures are handled and logged, never swallowed silently.
-
-### Swap in a real embedding model
-
-Replace `_build_embeddings()` in `RAGKnowledgePromptAgent` with calls to a real embedding API or a vector database client (Qdrant, Pinecone, pgvector).
-
-### Add LangGraph for stateful workflows
-
-The current orchestrator is a plain Python loop. For production use with checkpointing, human-in-the-loop approval, and parallel execution, wrap the agent calls in LangGraph nodes.
-
----
-
 ## License
 
 MIT
